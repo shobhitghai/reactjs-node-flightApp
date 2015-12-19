@@ -3,8 +3,9 @@ var application_root = __dirname,
     fs = require("fs"),
     bodyParser = require("body-parser"),
     constants = require("./private/constants.js"),
-    path = require('path'),
-    port = 3001;
+    path = require('path');
+var port = process.env.PORT || 3001;
+    
 
 var app = express();
 
