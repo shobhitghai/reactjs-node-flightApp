@@ -60,38 +60,78 @@ var Dropdown = React.createClass({
   }
 });
 
+var ProviderChkBox = React.createClass({
+	getInitialState: function(){
+		return {
+			checked: false
+		};
+	},
+	checkBoxSelection: function(e){
+		this.props.updateFilter(e);
+		this.setState({checked: !this.state.checked});
+	},
+	componentWillReceiveProps: function(){
+		//use this for setting data before render is called after initial mouning
+		this.setState({
+			checked: false
+		});
+	},
+	render: function(){
+		return (
+			<input type="checkbox" checked={this.state.checked ? 'checked': null} onChange={this.checkBoxSelection} value={this.props.value}/>
+		)
+	}
+});
+
 var FilterPanel = React.createClass({
 	getInitialState: function(){
 		this.filterSelectedProvider = [];
+		this.flightProviderArr = [];
 
 		return null;
 	},
-	handleProviderSelection: function(e){
+	handleFilterPanelSelection: function(e){
 		if(e.target.checked){
 			this.filterSelectedProvider.push(e.target.value);
 		}else{
 			this.filterSelectedProvider.splice(this.filterSelectedProvider.indexOf(e.target.value), 1);
+
+			if(!this.filterSelectedProvider.length){
+				this.filterSelectedProvider = this.flightProviderArr;
+
+				this.props.filterHandler({
+					provider: this.filterSelectedProvider
+				});
+
+				this.filterSelectedProvider = []
+
+				return false;
+			}
 		};
+
+		this.props.filterHandler({
+			provider: this.filterSelectedProvider
+		});
 
 		console.log(this.filterSelectedProvider);
 	},
 	render: function(){
-		var flightProviderArr = [];
+		this.flightProviderArr = [];
 		var providerChkGroup = [];
 		this.filterSelectedProvider = [];
 
 		for (var i = this.props.flightProviders.length - 1; i >= 0; i--) {
-			if(flightProviderArr.indexOf(this.props.flightProviders[i]) === -1){
-				flightProviderArr.push(this.props.flightProviders[i]);
+			if(this.flightProviderArr.indexOf(this.props.flightProviders[i]) === -1){
+				this.flightProviderArr.push(this.props.flightProviders[i]);
 			}
 		};
 
-		for (var i = flightProviderArr.length - 1; i >= 0; i--) {
+		for (var i = this.flightProviderArr.length - 1; i >= 0; i--) {
 			providerChkGroup.push(
 				<div key={i} className="checkbox">
 	  				<label>
-	    				<input key={i} type="checkbox" onChange={this.handleProviderSelection} value={flightProviderArr[i]}/>
-	    					{flightProviderArr[i]}
+	    				<ProviderChkBox key={i} value={this.flightProviderArr[i]} updateFilter={this.handleFilterPanelSelection}/>
+	    					{this.flightProviderArr[i]}
 	  					</label>
 				</div>
 			);
@@ -107,20 +147,36 @@ var FilterPanel = React.createClass({
 
 
 var FlightTable = React.createClass({
+	getInitialState: function(){
+		return {
+			refreshTable: false
+		};
+	},
+	updateTable: function(data){
+		this.updatedData = data;
+	},
 	render: function(){
 		var rows = [];
 
-		for(var i = 0;  i < this.props.data.length; i++ ){
+		if(this.updatedData){
+			this.data = this.updatedData;
+		}else{
+			this.data = this.props.data;
+		}
+
+		for(var i = 0;  i < this.data.length; i++ ){
   			rows.push(
   				<tr key={i}>
-	  				<td>{this.props.data[i].originCity + "-" + this.props.data[i].departureCity}</td>
-					<td>{this.props.data[i].provider + " " + this.props.data[i].flightNumber}</td>
-					<td>{this.props.data[i].duration + " hr"}</td>
-					<td>{this.props.data[i].originTime}</td>
-					<td>{"Rs. " + this.props.data[i].ticketPrice}</td>
+	  				<td>{this.data[i].originCity + "-" + this.data[i].departureCity}</td>
+					<td>{this.data[i].provider + " " + this.data[i].flightNumber}</td>
+					<td>{this.data[i].duration + " hr"}</td>
+					<td>{this.data[i].originTime}</td>
+					<td>{"Rs. " + this.data[i].ticketPrice}</td>
 				</tr>
   			);
 	  	}
+
+	  	this.updatedData = null;
 
 		return (
 			<table className="table table-hover">
@@ -150,9 +206,21 @@ var FlightData = React.createClass({
 			isData: false
 		}
 	},
-  	updateTable: function(data){
-  		this.data = data
+  	updateData: function(data){
+  		this.data = data;
   	},
+  	filterTable: function(options){
+  		console.log(options);
+
+  		var newData = this.data.filter(function(i){
+			return options.provider.indexOf(i.provider) !== -1;
+		})
+  		this.refs.table.updateTable(newData);
+  		this.refs.table.setState({
+  			refreshTable: true
+  		});
+  	},
+
 	render: function(){
 		var flightProviders = [];
 		var panel;
@@ -162,10 +230,11 @@ var FlightData = React.createClass({
 	  	}
 
 		if(this.state.isData){
+			
 			panel = (
 					<div>
-						<FilterPanel flightProviders={flightProviders}/>
-						<FlightTable data={this.data} />
+						<FilterPanel ref="panel" flightProviders={flightProviders} filterHandler={this.filterTable}/>
+						<FlightTable ref="table" data={this.data} />
 					</div>
 			)
 		}
@@ -206,8 +275,8 @@ var BookingWindow = React.createClass({
 	    		var data = $.parseJSON(data);
 
 	    		if(data){
-		    		self.refs.flightTable.updateTable(data);
-		    		self.refs.flightTable.setState({
+		    		self.refs.flightData.updateData(data);
+		    		self.refs.flightData.setState({
 	    				isData: true
 		    		});
 	    		}
@@ -221,7 +290,7 @@ var BookingWindow = React.createClass({
 				<Dropdown key="0" ref="originDD" data={this.originCityOption}/>
 				<Dropdown key="1" ref="destinationDD" data={this.destinationCityOption}/>
 	            <button className="btn btn-primary" onClick={this.fetchFlight} type="button">Submit</button>
-	            <FlightData ref="flightTable"/>
+	            <FlightData ref="flightData"/>
 			</span>
 		)
 	}
