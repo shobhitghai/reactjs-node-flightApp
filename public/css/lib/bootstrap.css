@@ -6582,3 +6582,26 @@ button.close {
   }
 }
 /*# sourceMappingURL=bootstrap.css.map */
+
+.filter-checkbox{
+    display: inline-block;
+    margin-right: 30px;
+}
+
+.selection-panel .dropdown{
+  display: inline-block;
+  float: left;
+  margin-right: 30px; 
+}
+
+.filter-panel-btn{
+  margin-bottom: 20px;
+}
+
+.credits{
+  margin-top: 50px;
+}
+
+.btn .caret{
+  margin-left: 10px;
+}

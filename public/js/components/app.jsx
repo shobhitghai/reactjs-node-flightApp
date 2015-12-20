@@ -128,7 +128,7 @@ var FilterPanel = React.createClass({
 
 		for (var i = this.flightProviderArr.length - 1; i >= 0; i--) {
 			providerChkGroup.push(
-				<div key={i} className="checkbox">
+				<div key={i} className="checkbox filter-checkbox">
 	  				<label>
 	    				<ProviderChkBox key={i} value={this.flightProviderArr[i]} updateFilter={this.handleFilterPanelSelection}/>
 	    					{this.flightProviderArr[i]}
@@ -138,8 +138,16 @@ var FilterPanel = React.createClass({
 		};
 
 		return (
-			<div>
-				{providerChkGroup}
+			<div className="col-md-12"> 
+				<button className="btn btn-sm btn-default filter-panel-btn" type="button" data-toggle="collapse" data-target="#filterFlight">
+  					Filter flights
+				</button>
+				<div className="collapse" id="filterFlight">
+					<div className="well">
+				    	{providerChkGroup}
+    				</div>
+				</div>
+				
 			</div>
 		)
 	}
@@ -232,9 +240,14 @@ var FlightData = React.createClass({
 		if(this.state.isData){
 			
 			panel = (
-					<div>
-						<FilterPanel ref="panel" flightProviders={flightProviders} filterHandler={this.filterTable}/>
-						<FlightTable ref="table" data={this.data} />
+					<div className="col-md-12">
+						<div className="page-header">
+							<h3>Flights available</h3>
+						</div>
+							<FilterPanel ref="panel" flightProviders={flightProviders} filterHandler={this.filterTable}/>
+						<div className="col-md-12">
+							<FlightTable ref="table" data={this.data} />
+						</div>
 					</div>
 			)
 		}
@@ -287,9 +300,13 @@ var BookingWindow = React.createClass({
 	render: function(){
 		return (
 			<span>
-				<Dropdown key="0" ref="originDD" data={this.originCityOption}/>
-				<Dropdown key="1" ref="destinationDD" data={this.destinationCityOption}/>
-	            <button className="btn btn-primary" onClick={this.fetchFlight} type="button">Submit</button>
+				<div className="btn-group col-md-8 selection-panel">
+					<Dropdown key="0" ref="originDD" data={this.originCityOption}/>
+					<Dropdown key="1" ref="destinationDD" data={this.destinationCityOption}/>
+					<div className="col-md-3"> 
+	            		<button className="btn btn-primary" onClick={this.fetchFlight} type="button">Search</button>
+	            	</div>
+		        </div>
 	            <FlightData ref="flightData"/>
 			</span>
 		)
